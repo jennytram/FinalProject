@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Welcome, {{ screen_name }}
+{% endblock %}
+
+{% block main %}
+    <form action="/account/change_scrnm" method="post">
+        <h3>Change screen name</h3>
+        <label for="new_scrnm">This action is permanent.</label>
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="new_scrnm" placeholder="New screen name" type="text">
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="new_scrnm_cnfrm" placeholder="Confirm new screen name" type="password">
+        </div>
+        <button class="btn btn-primary" type="submit">Confirm change</button>
+    </form>
+
+    <form action="/account/change_pwd" method="post">
+        <h3>Change password</h3>
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="old_pwd" placeholder="Old password" type="text">
+        </div>
+        <label for="new_pwd">This action is permanent.</label>
+        <div class="form-group">
+            <input class="form-control" name="new_pwd" placeholder="New password" type="password">
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="new_pwd_cnfrm" placeholder="Confirm new password" type="password">
+        </div>
+        <button class="btn btn-primary" type="submit">Confirm change</button>
+    </form>
+{% endblock %}
