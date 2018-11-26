@@ -13,6 +13,7 @@ from helpers import apology, login_required
 # Configure application
 app = Flask(__name__)
 
+
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
@@ -24,9 +25,6 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
-# Custom filter
-app.jinja_env.filters["usd"] = usd
-
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_FILE_DIR"] = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
@@ -34,13 +32,72 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Configure CS50 Library to use SQLite database
-db = SQL("sqlite:///finance.db")
+db = SQL("sqlite:///database.db")
 
-@app.route("/")
+@app.route("/", methods=["GET","POST"])
 @login_required
-def render():
-    # NOTE TO JENNY: create "index.html"
-    return render_template("index.html")
+def index():
+    if request.method == "GET":
+        return render_template("index.html")
+
+    return redirect("/post")
+
+
+@app.route("/post", methods=["GET", "POST"])
+@login_required
+def post():
+    if request.method == "GET":
+        return render_template("newpost.html")
+
+    db.execute("INSERT INTO posts (usr_id, text) VALUES (:id, :text)", id=session["user_id"], text=request.form.get("message"))
+    return redirect("/")
+
+
+
+"""account-related methods:"""
+
+@app.route("/account")
+@login_required
+def acct():
+    return render_template("account.html")
+
+
+@app.route("/account/change_pwd")
+@login_required
+def change_pwd():
+    if not request.form.get("old_pwd"):
+        return apology("You must enter your old password before changing it.")
+    if not request.form.get("new_pwd"):
+        return apology("You must choose a new password.")
+    if not request.form.get("new_pwd_cnfrm"):
+        return apology("You must confirm your new password.")
+    if request.form.get("new_pwd") != request.form.get("new_pwd_cnfrm"):
+        return apology("Your new passwords must match.")
+
+    old_hash = db.execute("SELECT hash FROM users WHERE id=:id", id=session["user_id"])
+
+    if not check_password_hash(old_hash, request.form.get("old_pwd")):
+        return apology("You failed to properly input your old password.")
+    db.execute("UPDATE users SET hash=:hash WHERE id=:id", id=session["user_id"], hash=generate_password_hash(request.form.get("new_pwd")))
+
+    return redirect("/logout")
+
+
+@app.route("/account/change_scrnm")
+@login_required
+def change_scrnm():
+    if not request.form.get("new_scrnm"):
+        return apology("Please enter a new screen name to change it.")
+    if not request.form.get("new_scrnm_cnfrm"):
+        return apology("Your new screen names do not match.")
+
+    # check for repeats
+    result = db.execute("SELECT * FROM users WHERE scrnm=:scrnm", scrnm=request.form.get("new_scrnm"))
+    if result:
+        return apology("This screen name is taken. Try a different one.")
+    db.execute("UPDATE users SET scrnm=:scrnm WHERE id=:id", scrnm=request.form.get("new_scrnm"), id=session["user_id"])
+
+    return redirect("/logout")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -62,8 +119,8 @@ def login():
             return apology("Please provide your password.", 403)
 
         # Query database for username
-        rows = db.execute("SELECT * FROM users WHERE username = :username",
-                          username=request.form.get("username"))
+        rows = db.execute("SELECT * FROM users WHERE scrnm = :scrnm",
+                          scrnm=request.form.get("screen_name"))
 
         # Ensure username exists and password is correct
         if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
@@ -113,21 +170,21 @@ def register():
         if digits[i] in request.form.get("password-cnfrm"):
             break
         if digits[i] == "0":
-            return apology("Please ensure that password contains at least one digit.")
+            return apology("Please ensure that your password contains at least one digit.")
 
     # encrypt password and instantiate variables
     pwd = generate_password_hash(request.form.get("password-cnfrm"))
     usr = request.form.get("screen_name")
 
     # check for repeats
-    result = db.execute("SELECT * FROM users WHERE username=:usr", usr=usr)
+    result = db.execute("SELECT * FROM users WHERE scrnm=:scrnm", scrnm=usr)
     if result:
-        return apology("username is taken")
+        return apology("This screen name is taken. Try a different one.")
 
     # insert user into database
-    db.execute("INSERT INTO users (username, hash) VALUES (:usr, :pwd)", usr=usr, pwd=pwd)
+    db.execute("INSERT INTO users (scrnm, hash) VALUES (:scrnm, :pwd)", scrnm=usr, pwd=pwd)
 
     # log user in
-    session["user_id"] = db.execute("SELECT * FROM users WHERE username = :username", username=request.form.get("username"))[0]["id"]
+    session["user_id"] = db.execute("SELECT * FROM users WHERE scrnm = :scrnm", scrnm=request.form.get("screen_name"))[0]["id"]
 
-    #return redirect(somewhere)
+    return redirect("/")
