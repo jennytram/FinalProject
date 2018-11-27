@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Stock portfolio
+{% endblock %}
+
+{% block main %}
+    <table style="width:100%">
+        <tr>
+            <th>Company</th>
+            <th>Ticker Symbol</th>
+            <th>Shares Owned</th>
+            <th>Stock Price</th>
+            <th>Total Value</th>
+        </tr>
+        {% for stock in portfolio %}
+            <tr>
+                <td>
+                    {{ stock["name"] }}
+                </td>
+                <td>
+                    {{ stock["symbol"] }}
+                </td>
+                <td>
+                    {{ stock["shares"] }}
+                </td>
+                <td>
+                    {{ stock["price"] }}
+                </td>
+                <td>
+                    {{ stock["value"] }}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+    <h4>
+        Cash balance: {{ cash }}
+    </h4>
+    <h3>
+        Total Dough: {{ capital }}
+    </h3>
+{% endblock %}
