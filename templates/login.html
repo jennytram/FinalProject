@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block main %}
-    <form action="/login" method="post">
+    <form action="/login" method="post" name="login" onsubmit="return validateForm()">
         <div class="form-group">
             <input autocomplete="off" autofocus class="form-control" name="screen_name" placeholder="Screen name" type="text">
         </div>
@@ -14,4 +14,15 @@
         </div>
         <button class="btn btn-primary" type="submit">Log In</button>
     </form>
+
+    <script>
+        function validateForm() {
+            var screen_name = document.forms["login"]["screen_name"].value;
+            var password = document.forms["login"]["password"].value;
+            if (screen_name == "" || password == "") {
+                alert("Please fill out all fields. All fields are required.");
+                return false;
+            }
+        }
+    </script>
 {% endblock %}
