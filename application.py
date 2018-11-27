@@ -37,9 +37,9 @@ db = SQL("sqlite:///database.db")
 @app.route("/", methods=["GET","POST"])
 @login_required
 def index():
+    # the majority of post implementation and index implementation remains to be done when I receive the html files
     if request.method == "GET":
-        return render_template("index.html")
-
+        return render_template("index.html", posts=db.execute("SELECT * FROM posts"))
     return redirect("/post")
 
 
@@ -59,12 +59,15 @@ def post():
 @app.route("/account")
 @login_required
 def acct():
-    return render_template("account.html")
+    return render_template("account.html", screen_name=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"])
 
 
-@app.route("/account/change_pwd")
+@app.route("/account/change_pwd", methods=["GET", "POST"])
 @login_required
 def change_pwd():
+    if request.method == "GET":
+        return render_template("change_pwd.html", screen_name=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"])
+
     if not request.form.get("old_pwd"):
         return apology("You must enter your old password before changing it.")
     if not request.form.get("new_pwd"):
@@ -74,7 +77,7 @@ def change_pwd():
     if request.form.get("new_pwd") != request.form.get("new_pwd_cnfrm"):
         return apology("Your new passwords must match.")
 
-    old_hash = db.execute("SELECT hash FROM users WHERE id=:id", id=session["user_id"])
+    old_hash = db.execute("SELECT hash FROM users WHERE id=:id", id=session["user_id"])[0]["hash"]
 
     if not check_password_hash(old_hash, request.form.get("old_pwd")):
         return apology("You failed to properly input your old password.")
@@ -83,13 +86,18 @@ def change_pwd():
     return redirect("/logout")
 
 
-@app.route("/account/change_scrnm")
+@app.route("/account/change_scrnm", methods=["GET", "POST"])
 @login_required
 def change_scrnm():
+    if request.method == "GET":
+        return render_template("change_scrnm.html", screen_name=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"])
+
     if not request.form.get("new_scrnm"):
         return apology("Please enter a new screen name to change it.")
     if not request.form.get("new_scrnm_cnfrm"):
-        return apology("Your new screen names do not match.")
+        return apology("Please confirm your screen name.")
+    if request.form.get("new_scrnm") != request.form.get("new_scrnm_cnfrm"):
+        return apology("Please ensure that your screen names match.")
 
     # check for repeats
     result = db.execute("SELECT * FROM users WHERE scrnm=:scrnm", scrnm=request.form.get("new_scrnm"))
