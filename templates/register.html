@@ -5,12 +5,12 @@
 {% endblock %}
 
 {% block main %}
-    <form action="/register" method="post" name="form">
-        <label for="screen_name">You can change this from your account settings</label>
+    <form action="/register" method="post" name="register" onsubmit="return validateForm()">
+        <label for="screen_name">You can change this from your account settings.</label>
         <div class="form-group">
             <input autocomplete="off" autofocus class="form-control" name="screen_name" placeholder="Screen name" type="text">
         </div>
-        <label for="password">Password must contain at least one number</label>
+        <label for="password">Password must contain at least one number.</label>
         <div class="form-group">
             <input class="form-control" name="password" id="password" placeholder="Password" type="password">
         </div>
@@ -21,17 +21,20 @@
     </form>
 
     <script>
-        let user = document.querySelector("input[name='username']");
-        document.querySelector("#button").addEventListener("click", function(event){
-            event.preventDefault();
-            $.get("/check?username=" + user.value, function(data){
-                if (data == false){
-                    alert("Username taken. Please select a different username.");
-                }
-                else{
-                    document.querySelector("form").submit();
-                }
-            })
-        })
+        function validateForm() {
+            var scrnm = document.forms["register"]["screen_name"].value;
+            var pwd = document.forms["register"]["password"].value;
+            var pwd_cnfrm = document.forms["register"]["password-cnfrm"].value;
+            if (scrnm == "" || pwd == "" || pwd_cnfrm == "") {
+                alert("Please fill out all fields. All fields are required.");
+                return false;
+            }
+
+            if (pwd != pwd_cnfrm)
+            {
+                alert("Passwords must match.");
+                return false;
+            }
+        }
     </script>
 {% endblock %}
