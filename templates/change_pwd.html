@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Welcome, {{ screen_name }}
+{% endblock %}
+
+{% block main %}
+    <form action="/account/change_pwd" method="post" name="change_pwd" onsubmit="return validateForm()">
+        <h3>Change password</h3>
+        <label for="new_pwd">This action is permanent.</label>
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="old_pwd" placeholder="Old password" type="password">
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="new_pwd" placeholder="New password" type="password">
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="new_pwd_cnfrm" placeholder="Confirm password" type="password">
+        </div>
+        <button class="btn btn-primary" type="submit">Confirm change</button>
+    </form>
+
+    <script>
+        function validateForm() {
+            var old_pwd = document.forms["change_pwd"]["old_pwd"].value;
+            var new_pwd = document.forms["change_pwd"]["new_pwd"].value;
+            var new_pwd_cnfrm = document.forms["change_pwd"]["new_pwd_cnfrm"].value;
+            if (old_pwd == "" || new_pwd == "" || new_pwd_cnfrm == "") {
+                alert("Please fill out all fields. All fields are required.");
+                return false;
+            }
+
+            if (new_pwd != new_pwd_cnfrm)
+            {
+                alert("New passwords must match.");
+                return false;
+            }
+        }
+    </script>
+{% endblock %}
