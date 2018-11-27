@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Welcome, {{ screen_name }}
+{% endblock %}
+
+{% block main %}
+    <form action="/account/change_scrnm" method="post" name="change_scrnm" onsubmit="return validateForm()">
+        <h3>Change screen name</h3>
+        <label for="new_scrnm">This action is permanent.</label>
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="new_scrnm" placeholder="New screen name" type="text">
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="new_scrnm_cnfrm" placeholder="Confirm screen name" type="text">
+        </div>
+        <button class="btn btn-primary" type="submit">Confirm change</button>
+    </form>
+
+    <script>
+        function validateForm() {
+            var new_scrnm = document.forms["change_scrnm"]["new_scrnm"].value;
+            var new_scrnm_cnfrm = document.forms["change_scrnm"]["new_scrnm_cnfrm"].value;
+            if (new_scrnm == "" || new_scrnm_cnfrm == "") {
+                alert("Please fill out all fields. All fields are required.");
+                return false;
+            }
+
+            if (new_scrnm != new_scrnm_cnfrm)
+            {
+                alert("New screen names must match.");
+                return false;
+            }
+        }
+    </script>
+{% endblock %}
