@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    All Posts
+{% endblock %}
+
+{% block main %}
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Post ID</th>
+      <th scope="col">Title</th>
+      <th scope="col">Posted on...</th>
+    </tr>
+  </thead>
+
+  {% for post in posts %}
+  <tr>
+    <td>
+      {{ post["id"] }}
+    </td>
+    <td>
+      <a href='/see_post/{{ post["id"] }}'>{{ post["title"] }}</a>
+    </td>
+    <td>
+      {{ post["dt"] }}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
