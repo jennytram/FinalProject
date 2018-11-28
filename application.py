@@ -75,7 +75,7 @@ def see_post(pid):
 @login_required
 def comment():
     db.execute("INSERT INTO comments (usr_id, text, dt, usr_scrnm, post_id) VALUES (:id, :msg, :dt, :scrnm, :post_id)", id=session["user_id"], msg=request.form.get("comment"), dt=time.strftime('%Y-%m-%d %H:%M:%S'), scrnm=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"], post_id=session["post"])
-    return redirect("/")
+    return redirect(url_for("see_post", pid=session["post"]))
 
 
 """account-related methods:"""
