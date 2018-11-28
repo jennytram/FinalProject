@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Create a New Post
+{% endblock %}
+
+{% block main %}
+    <form action="/post" method="post" name="post" onsubmit="return validateForm()">
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="title" placeholder="Title" type="text">
+        </div>
+        <div class="form-group">
+            <textarea class="form-control" name="post" placeholder="What's up?" rows="4" type="text"></textarea>
+        </div>
+        <a href="/">Cancel</a>
+        <button class="btn btn-primary" type="submit">Post</button>
+    </form>
+
+    <script>
+        function validateForm() {
+            var title = document.forms["post"]["title"].value;
+            var post = document.forms["post"]["post"].value;
+            if (title == "" || post == "") {
+                alert("Your post must have a title and a body.");
+                return false;
+            }
+        }
+    </script>
+{% endblock %}
