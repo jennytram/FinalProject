@@ -1,42 +1,31 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Stock portfolio
+    All Posts
 {% endblock %}
 
 {% block main %}
-    <table style="width:100%">
-        <tr>
-            <th>Company</th>
-            <th>Ticker Symbol</th>
-            <th>Shares Owned</th>
-            <th>Stock Price</th>
-            <th>Total Value</th>
-        </tr>
-        {% for stock in portfolio %}
-            <tr>
-                <td>
-                    {{ stock["name"] }}
-                </td>
-                <td>
-                    {{ stock["symbol"] }}
-                </td>
-                <td>
-                    {{ stock["shares"] }}
-                </td>
-                <td>
-                    {{ stock["price"] }}
-                </td>
-                <td>
-                    {{ stock["value"] }}
-                </td>
-            </tr>
-        {% endfor %}
-    </table>
-    <h4>
-        Cash balance: {{ cash }}
-    </h4>
-    <h3>
-        Total Dough: {{ capital }}
-    </h3>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Title</th>
+      <th scope="col">Posted on...</th>
+      <th scope="col">Posted by...</th>
+    </tr>
+  </thead>
+
+  {% for post in posts %}
+  <tr>
+    <td>
+      <a href='/see_post/{{ post["id"] }}'>{{ post["title"] }}</a>
+    </td>
+    <td>
+      {{ post["dt"] }}
+    </td>
+    <td>
+      {{ post["usr_scrnm"] }}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
 {% endblock %}
