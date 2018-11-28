@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block main %}
+    <h3>{{ title }}</h3>
+    <p>
+        {{ text }}
+    </p>
+    <span style="display:block; height: 50pt;"></span>
+    <h4>Comments</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">User</th>
+                <th scope="col">Comment</th>
+            </tr>
+        </thead>
+        {% for comment in comments %}
+            <tr>
+                <td>
+                    {{ comment["usr_scrnm"] }}
+                </td>
+                <td>
+                    {{ comment["text"] }}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <form action="/comment" method="post" name="post" onsubmit="return validateForm()">
+        <div class="form-group">
+            <textarea class="form-control" name="comment" placeholder="Leave a comment!" rows="4" type="text"></textarea>
+        </div>
+        <a href="/">Cancel</a>
+        <button class="btn btn-primary" type="submit">Comment</button>
+    </form>
+
+    <script>
+        function validateForm() {
+            var post = document.forms["post"]["comment"].value;
+            if (post == "") {
+                alert("Your comment cannot be blank.");
+                return false;
+            }
+
+            return true;
+        }
+    </script>
+{% endblock %}
