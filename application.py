@@ -1,18 +1,18 @@
 import os
 
 from cs50 import SQL
-from flask import Flask, flash, jsonify, redirect, render_template, request, session
+from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions
 from werkzeug.security import check_password_hash, generate_password_hash
 import datetime
+import time
 
 from helpers import apology, login_required
 
 # Configure application
 app = Flask(__name__)
-
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -37,10 +37,17 @@ db = SQL("sqlite:///database.db")
 @app.route("/", methods=["GET","POST"])
 @login_required
 def index():
-    # the majority of post implementation and index implementation remains to be done when I receive the html files
     if request.method == "GET":
-        return render_template("index.html", posts=db.execute("SELECT * FROM posts"))
+        return render_template("index.html", posts=db.execute("SELECT * FROM posts ORDER BY dt DESC"))
     return redirect("/post")
+
+
+@app.route("/my_posts")
+@login_required
+def my_posts():
+    if request.method == "GET":
+        return render_template("yourposts.html", posts=db.execute("SELECT * FROM posts WHERE usr_id=:id ORDER BY dt DESC", id=session["user_id"]))
+    return redirect("/account")
 
 
 @app.route("/post", methods=["GET", "POST"])
@@ -49,9 +56,26 @@ def post():
     if request.method == "GET":
         return render_template("newpost.html")
 
-    db.execute("INSERT INTO posts (usr_id, text) VALUES (:id, :text)", id=session["user_id"], text=request.form.get("message"))
+    db.execute("INSERT INTO posts (usr_id, text, usr_scrnm, title, dt) VALUES (:usr_id, :msg, :scrnm, :title, :dt)", usr_id=session["user_id"], msg=request.form.get("post"), scrnm=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"], title=request.form.get("title"), dt=time.strftime('%Y-%m-%d %H:%M:%S'))
     return redirect("/")
 
+
+@app.route("/see_post/<pid>")
+@login_required
+def see_post(pid):
+    # complete the title portion (how do we get the id?)
+    session["url"] = request.url_rule.rule
+
+    # set comment tracking configuration
+    session["post"] = pid
+    return render_template("see_post.html", title=db.execute("SELECT title FROM posts WHERE id=:id", id=session["post"])[0]["title"], text=db.execute("SELECT text FROM posts WHERE id=:id", id=pid)[0]["text"], comments=db.execute("SELECT * FROM comments WHERE post_id=:id ORDER BY dt ASC", id=session["post"]))
+
+
+@app.route("/comment", methods=["POST"])
+@login_required
+def comment():
+    db.execute("INSERT INTO comments (usr_id, text, dt, usr_scrnm, post_id) VALUES (:id, :msg, :dt, :scrnm, :post_id)", id=session["user_id"], msg=request.form.get("comment"), dt=time.strftime('%Y-%m-%d %H:%M:%S'), scrnm=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"], post_id=session["post"])
+    return redirect("/")
 
 
 """account-related methods:"""
