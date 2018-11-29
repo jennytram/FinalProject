@@ -9,8 +9,10 @@
   <thead>
     <tr>
       <th scope="col">Title</th>
+      <th scope="col">Likes</th>
       <th scope="col">Posted on...</th>
       <th scope="col">Posted by...</th>
+      <th scope="col">Actions</th>
     </tr>
   </thead>
 
@@ -20,10 +22,16 @@
       <a href='/see_post/{{ post["id"] }}'>{{ post["title"] }}</a>
     </td>
     <td>
+      {{ likes(post["id"]) }}
+    </td>
+    <td>
       {{ post["dt"] }}
     </td>
     <td>
       {{ post["usr_scrnm"] }}
+    </td>
+    <td>
+      <a href='/like/{{ post["id"] }}'>{{ liked(post["id"]) }}</a>
     </td>
   </tr>
   {% endfor %}
