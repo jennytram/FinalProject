@@ -10,6 +10,7 @@
     <tr>
       <th scope="col">Title</th>
       <th scope="col">Likes</th>
+      <th scope="col">Comments</th>
       <th scope="col">Posted on...</th>
       <th scope="col">Posted by...</th>
       <th scope="col">Actions</th>
@@ -22,7 +23,10 @@
       <a href='/see_post/{{ post["id"] }}'>{{ post["title"] }}</a>
     </td>
     <td>
-      {{ likes(post["id"]) }}
+      {{ likes(post["id"]) }} likes
+    </td>
+    <td>
+      {{ comments(post["id"]) }} comments
     </td>
     <td>
       {{ post["dt"] }}
