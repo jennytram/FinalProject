@@ -14,4 +14,18 @@
     <p>
         <a href="/account/change_scrnm">Change Screen Name</a>
     </p>
+    <p>
+        <form action="/account/delete" method="post" name="delete_account" onsubmit="return confirmDelete()">
+            <label for="delete_me">Warning: The following action is permanent.</label>
+            <div class="form-group">
+                <button class="btn btn-primary" name="delete_me" type="submit">Delete Account</button>
+            </div>
+        </form>
+    </p>
+
+    <script>
+        function confirmDelete() {
+            return confirm("Are you sure you would like to delete your account? This action is permanent.")
+        }
+    </script>
 {% endblock %}
