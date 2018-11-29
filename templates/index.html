@@ -32,10 +32,14 @@
       {{ post["dt"] }}
     </td>
     <td>
-      {{ post["usr_scrnm"] }}
+      <a href='/usr/{{ post["usr_scrnm"] }}'>{{ post["usr_scrnm"] }}</a>
     </td>
     <td>
-      <a href='/like/{{ post["id"] }}'>{{ liked(post["id"]) }}</a>
+      <a href='/like/{{ post["id"] }}'>{{ isLiked(post["id"]) }}</a>
+      {% if me == post["usr_id"] %}
+        &nbsp;
+        <a href="/delete/{{ post['id'] }}">Delete</a>
+      {% endif %}
     </td>
   </tr>
   {% endfor %}
