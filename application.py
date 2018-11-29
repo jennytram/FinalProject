@@ -37,8 +37,17 @@ db = SQL("sqlite:///database.db")
 @app.route("/", methods=["GET","POST"])
 @login_required
 def index():
+    def isLiked(pid):
+        liked = db.execute("SELECT * FROM likes WHERE usr_id=:id AND post_id=:pid", id=session["user_id"], pid=pid)
+        if liked:
+            return "Unlike"
+        return "Like"
+
+    def likes(pid):
+        return len(db.execute("SELECT * FROM likes WHERE post_id=:pid", pid=pid))
+
     if request.method == "GET":
-        return render_template("index.html", posts=db.execute("SELECT * FROM posts ORDER BY dt DESC"))
+        return render_template("index.html", posts=db.execute("SELECT * FROM posts ORDER BY dt DESC"), liked=isLiked, likes=likes)
     return redirect("/post")
 
 
@@ -78,7 +87,23 @@ def comment():
     return redirect(url_for("see_post", pid=session["post"]))
 
 
-"""account-related methods:"""
+@app.route("/like/<pid>")
+@login_required
+def like(pid):
+    liked = db.execute("SELECT * FROM likes WHERE usr_id=:id AND post_id=:pid", id=session["user_id"], pid=pid)
+
+    # unlike if already liked
+    if liked:
+        db.execute("DELETE FROM likes WHERE usr_id=:id AND post_id=:pid", id=session["user_id"], pid=pid)
+
+    # like if not already liked
+    else:
+        db.execute("INSERT INTO likes (usr_id, post_id) VALUES (:id, :pid)", id=session["user_id"], pid=pid)
+
+    return redirect("/")
+
+
+# account-related methods:
 
 @app.route("/account")
 @login_required
