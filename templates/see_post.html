@@ -14,8 +14,9 @@
     <table class="table">
         <thead>
             <tr>
-                <th scope="col">User</th>
+                <th scope="col">Posted by...</th>
                 <th scope="col">Comment</th>
+                <th scope="col">Posted on...</th>
             </tr>
         </thead>
         {% for comment in comments %}
@@ -25,6 +26,9 @@
                 </td>
                 <td>
                     {{ comment["text"] }}
+                </td>
+                <td>
+                    {{ comment["dt"] }}
                 </td>
             </tr>
         {% endfor %}
