@@ -34,23 +34,25 @@ Session(app)
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///database.db")
 
+# database-dependent helper functions
+def isLiked(pid):
+    liked = db.execute("SELECT * FROM likes WHERE usr_id=:id AND post_id=:pid", id=session["user_id"], pid=pid)
+    if liked:
+        return "Unlike"
+    return "Like"
+
+def likes(pid):
+    return len(db.execute("SELECT * FROM likes WHERE post_id=:pid", pid=pid))
+
+def comments(pid):
+    return len(db.execute("SELECT * FROM comments WHERE post_id=:pid", pid=pid))
+
+
 @app.route("/", methods=["GET","POST"])
 @login_required
 def index():
-    def isLiked(pid):
-        liked = db.execute("SELECT * FROM likes WHERE usr_id=:id AND post_id=:pid", id=session["user_id"], pid=pid)
-        if liked:
-            return "Unlike"
-        return "Like"
-
-    def likes(pid):
-        return len(db.execute("SELECT * FROM likes WHERE post_id=:pid", pid=pid))
-
-    def comments(pid):
-        return len(db.execute("SELECT * FROM comments WHERE post_id=:pid", pid=pid))
-
     if request.method == "GET":
-        return render_template("index.html", posts=db.execute("SELECT * FROM posts ORDER BY dt DESC"), liked=isLiked, likes=likes, comments=comments)
+        return render_template("index.html", posts=db.execute("SELECT * FROM posts ORDER BY dt DESC"), isLiked=isLiked, likes=likes, comments=comments, me=session["user_id"])
     return redirect("/post")
 
 
@@ -58,8 +60,14 @@ def index():
 @login_required
 def my_posts():
     if request.method == "GET":
-        return render_template("yourposts.html", posts=db.execute("SELECT * FROM posts WHERE usr_id=:id ORDER BY dt DESC", id=session["user_id"]))
+        return render_template("index.html", posts=db.execute("SELECT * FROM posts WHERE usr_id=:id ORDER BY dt DESC", id=session["user_id"]), isLiked=isLiked, likes=likes, comments=comments, me=session["user_id"])
     return redirect("/account")
+
+
+@app.route("/usr/<usr_scrnm>")
+@login_required
+def usr(usr_scrnm):
+    return render_template("index.html", posts=db.execute("SELECT * FROM posts WHERE usr_scrnm=:scrnm ORDER BY dt DESC", scrnm=usr_scrnm), isLiked=isLiked, likes=likes, comments=comments, me=session["user_id"])
 
 
 @app.route("/post", methods=["GET", "POST"])
@@ -77,12 +85,18 @@ def post():
     return redirect("/")
 
 
+@app.route("/delete/<pid>")
+@login_required
+def delete(pid):
+    db.execute("DELETE FROM posts WHERE id=:id", id=pid)
+    db.execute("DELETE FROM comments WHERE post_id=:id", id=pid)
+    db.execute("DELETE FROM likes WHERE post_id=:id", id=pid)
+    return redirect("/")
+
+
 @app.route("/see_post/<pid>")
 @login_required
 def see_post(pid):
-    # complete the title portion (how do we get the id?)
-    session["url"] = request.url_rule.rule
-
     # set comment tracking configuration
     session["post"] = pid
     return render_template("see_post.html", title=db.execute("SELECT title FROM posts WHERE id=:id", id=session["post"])[0]["title"], text=db.execute("SELECT text FROM posts WHERE id=:id", id=pid)[0]["text"], comments=db.execute("SELECT * FROM comments WHERE post_id=:id ORDER BY dt ASC", id=session["post"]))
@@ -162,6 +176,16 @@ def change_scrnm():
         return apology("This screen name is taken. Try a different one.")
     db.execute("UPDATE users SET scrnm=:scrnm WHERE id=:id", scrnm=request.form.get("new_scrnm"), id=session["user_id"])
 
+    return redirect("/logout")
+
+
+@app.route("/account/delete", methods=["POST"])
+@login_required
+def delete_account():
+    db.execute("DELETE FROM users WHERE id=:id", id=session["user_id"])
+    db.execute("DELETE FROM comments WHERE usr_id=:id", id=session["user_id"])
+    db.execute("DELETE FROM likes WHERE usr_id=:id", id=session["user_id"])
+    db.execute("DELETE FROM posts WHERE usr_id=:id", id=session["user_id"])
     return redirect("/logout")
 
 
