@@ -46,8 +46,11 @@ def index():
     def likes(pid):
         return len(db.execute("SELECT * FROM likes WHERE post_id=:pid", pid=pid))
 
+    def comments(pid):
+        return len(db.execute("SELECT * FROM comments WHERE post_id=:pid", pid=pid))
+
     if request.method == "GET":
-        return render_template("index.html", posts=db.execute("SELECT * FROM posts ORDER BY dt DESC"), liked=isLiked, likes=likes)
+        return render_template("index.html", posts=db.execute("SELECT * FROM posts ORDER BY dt DESC"), liked=isLiked, likes=likes, comments=comments)
     return redirect("/post")
 
 
@@ -64,6 +67,11 @@ def my_posts():
 def post():
     if request.method == "GET":
         return render_template("newpost.html")
+
+    if not request.form.get("title"):
+        return apology("Please include a title.")
+    if not request.form.get("post"):
+        return apology("Your post cannot be blank.")
 
     db.execute("INSERT INTO posts (usr_id, text, usr_scrnm, title, dt) VALUES (:usr_id, :msg, :scrnm, :title, :dt)", usr_id=session["user_id"], msg=request.form.get("post"), scrnm=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"], title=request.form.get("title"), dt=time.strftime('%Y-%m-%d %H:%M:%S'))
     return redirect("/")
