@@ -35,19 +35,23 @@ Session(app)
 db = SQL("sqlite:///database.db")
 
 # database-dependent helper functions
+# refers to index.html - display 'like' if user has not liked and 'unlike' if user has liked
 def isLiked(pid):
     liked = db.execute("SELECT * FROM likes WHERE usr_id=:id AND post_id=:pid", id=session["user_id"], pid=pid)
     if liked:
         return "Unlike"
     return "Like"
 
+# refers to index.html - display number of likes on a post
 def likes(pid):
     return len(db.execute("SELECT * FROM likes WHERE post_id=:pid", pid=pid))
 
+# refers to index.html - display number of comments on a post
 def comments(pid):
     return len(db.execute("SELECT * FROM comments WHERE post_id=:pid", pid=pid))
 
 
+# display all posts
 @app.route("/", methods=["GET","POST"])
 @login_required
 def index():
@@ -56,20 +60,23 @@ def index():
     return redirect("/post")
 
 
+# display logged-in user's posts
 @app.route("/my_posts")
 @login_required
 def my_posts():
     if request.method == "GET":
-        return render_template("index.html", posts=db.execute("SELECT * FROM posts WHERE usr_id=:id ORDER BY dt DESC", id=session["user_id"]), isLiked=isLiked, likes=likes, comments=comments, me=session["user_id"])
+        return render_template("usr_posts.html", posts=db.execute("SELECT * FROM posts WHERE usr_id=:id ORDER BY dt DESC", id=session["user_id"]), isLiked=isLiked, likes=likes, comments=comments, me=session["user_id"], user=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"])
     return redirect("/account")
 
 
+# display any user's posts
 @app.route("/usr/<usr_scrnm>")
 @login_required
 def usr(usr_scrnm):
-    return render_template("index.html", posts=db.execute("SELECT * FROM posts WHERE usr_scrnm=:scrnm ORDER BY dt DESC", scrnm=usr_scrnm), isLiked=isLiked, likes=likes, comments=comments, me=session["user_id"])
+    return render_template("usr_posts.html", posts=db.execute("SELECT * FROM posts WHERE usr_scrnm=:scrnm ORDER BY dt DESC", scrnm=usr_scrnm), isLiked=isLiked, likes=likes, comments=comments, me=session["user_id"], user=db.execute("SELECT scrnm FROM users WHERE scrnm=:scrnm", scrnm=usr_scrnm)[0]["scrnm"])
 
 
+# make a post
 @app.route("/post", methods=["GET", "POST"])
 @login_required
 def post():
@@ -81,10 +88,11 @@ def post():
     if not request.form.get("post"):
         return apology("Your post cannot be blank.")
 
-    db.execute("INSERT INTO posts (usr_id, text, usr_scrnm, title, dt) VALUES (:usr_id, :msg, :scrnm, :title, :dt)", usr_id=session["user_id"], msg=request.form.get("post"), scrnm=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"], title=request.form.get("title"), dt=time.strftime('%Y-%m-%d %H:%M:%S'))
+    db.execute("INSERT INTO posts (usr_id, text, usr_scrnm, title, dt) VALUES (:usr_id, :msg, :scrnm, :title, :dt)", usr_id=session["user_id"], msg=request.form.get("post"), scrnm=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"], title=request.form.get("title"), dt=time.strftime('%c'))
     return redirect("/")
 
 
+# delete one of logged-in user's posts
 @app.route("/delete/<pid>")
 @login_required
 def delete(pid):
@@ -94,6 +102,7 @@ def delete(pid):
     return redirect("/")
 
 
+# see any post
 @app.route("/see_post/<pid>")
 @login_required
 def see_post(pid):
@@ -102,6 +111,7 @@ def see_post(pid):
     return render_template("see_post.html", title=db.execute("SELECT title FROM posts WHERE id=:id", id=session["post"])[0]["title"], text=db.execute("SELECT text FROM posts WHERE id=:id", id=pid)[0]["text"], comments=db.execute("SELECT * FROM comments WHERE post_id=:id ORDER BY dt ASC", id=session["post"]))
 
 
+# leave a comment
 @app.route("/comment", methods=["POST"])
 @login_required
 def comment():
@@ -109,6 +119,7 @@ def comment():
     return redirect(url_for("see_post", pid=session["post"]))
 
 
+# like a post
 @app.route("/like/<pid>")
 @login_required
 def like(pid):
@@ -125,14 +136,15 @@ def like(pid):
     return redirect("/")
 
 
-# account-related methods:
-
+# account-related methods
+# display account settings page
 @app.route("/account")
 @login_required
 def acct():
     return render_template("account.html", screen_name=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"])
 
 
+# change logged-in user's password
 @app.route("/account/change_pwd", methods=["GET", "POST"])
 @login_required
 def change_pwd():
@@ -157,6 +169,7 @@ def change_pwd():
     return redirect("/logout")
 
 
+# change logged-in user's screen name
 @app.route("/account/change_scrnm", methods=["GET", "POST"])
 @login_required
 def change_scrnm():
@@ -179,6 +192,7 @@ def change_scrnm():
     return redirect("/logout")
 
 
+# delete logged-in user's account
 @app.route("/account/delete", methods=["POST"])
 @login_required
 def delete_account():
@@ -189,6 +203,7 @@ def delete_account():
     return redirect("/logout")
 
 
+# log in
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
@@ -226,6 +241,7 @@ def login():
         return render_template("login.html")
 
 
+# log out
 @app.route("/logout")
 def logout():
     """Log user out"""
@@ -237,6 +253,7 @@ def logout():
     return redirect("/")
 
 
+# register for an account
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "GET":
