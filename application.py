@@ -65,7 +65,7 @@ def index():
 @login_required
 def my_posts():
     if request.method == "GET":
-        return render_template("usr_posts.html", posts=db.execute("SELECT * FROM posts WHERE usr_id=:id ORDER BY dt DESC", id=session["user_id"]), isLiked=isLiked, likes=likes, comments=comments, me=session["user_id"], user=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"])
+        return render_template("usr_posts.html", posts=db.execute("SELECT * FROM posts WHERE usr_id=:id ORDER BY dt DESC", id=session["user_id"]), isLiked=isLiked, likes=likes, comments=comments, me=session["user_id"], user=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"], level=session["priv"])
     return redirect("/account")
 
 
@@ -73,7 +73,7 @@ def my_posts():
 @app.route("/usr/<usr_scrnm>")
 @login_required
 def usr(usr_scrnm):
-    return render_template("usr_posts.html", posts=db.execute("SELECT * FROM posts WHERE usr_scrnm=:scrnm ORDER BY dt DESC", scrnm=usr_scrnm), isLiked=isLiked, likes=likes, comments=comments, me=session["user_id"], user=db.execute("SELECT scrnm FROM users WHERE scrnm=:scrnm", scrnm=usr_scrnm)[0]["scrnm"])
+    return render_template("usr_posts.html", posts=db.execute("SELECT * FROM posts WHERE usr_scrnm=:scrnm ORDER BY dt DESC", scrnm=usr_scrnm), isLiked=isLiked, likes=likes, comments=comments, me=session["user_id"], user=db.execute("SELECT scrnm FROM users WHERE scrnm=:scrnm", scrnm=usr_scrnm)[0]["scrnm"], level=db.execute("SELECT * FROM users WHERE scrnm=:scrnm", scrnm=usr_scrnm)[0]["priv"])
 
 
 # make a post
@@ -96,9 +96,10 @@ def post():
 @app.route("/delete/<pid>")
 @login_required
 def delete(pid):
-    db.execute("DELETE FROM posts WHERE id=:id", id=pid)
-    db.execute("DELETE FROM comments WHERE post_id=:id", id=pid)
-    db.execute("DELETE FROM likes WHERE post_id=:id", id=pid)
+    if session["user_id"] == db.execute("SELECT * FROM posts WHERE id=:pid", pid=pid)[0]["usr_id"] or session["priv"] > 0:
+        db.execute("DELETE FROM posts WHERE id=:id", id=pid)
+        db.execute("DELETE FROM comments WHERE post_id=:id", id=pid)
+        db.execute("DELETE FROM likes WHERE post_id=:id", id=pid)
     return redirect("/")
 
 
@@ -131,9 +132,49 @@ def like(pid):
 
     # like if not already liked
     else:
-        db.execute("INSERT INTO likes (usr_id, post_id) VALUES (:id, :pid)", id=session["user_id"], pid=pid)
+        db.execute("INSERT INTO likes (usr_id, post_id, usr_scrnm) VALUES (:id, :pid, :scrnm)", id=session["user_id"], pid=pid, scrnm=db.execute("SELECT * FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"])
 
     return redirect("/")
+
+
+
+
+
+# admin privileges
+# delete any user's account
+@app.route("/admin_del/<usr_scrnm>", methods=["POST"])
+@login_required
+def admin_delete(usr_scrnm):
+    if usr_scrnm == "admin":
+        return apology("The administrator cannot delete itself.")
+
+    elif session["priv"] == 2:
+        db.execute("DELETE FROM users WHERE scrnm=:scrnm", scrnm=usr_scrnm)
+        db.execute("DELETE FROM comments WHERE usr_scrnm=:scrnm", scrnm=usr_scrnm)
+        db.execute("DELETE FROM likes WHERE usr_scrnm=:scrnm", scrnm=usr_scrnm)
+        db.execute("DELETE FROM posts WHERE usr_scrnm=:scrnm", scrnm=usr_scrnm)
+
+    return redirect("/")
+
+
+# change user privileges
+@app.route("/admin_make_mod/<usr_scrnm>", methods=["GET", "POST"])
+@login_required
+def make_mod(usr_scrnm):
+    if usr_scrnm == "admin":
+        return apology("The administrator cannot demote itself. This action would demote the administrator.")
+
+    elif session["priv"] == 2:
+        if db.execute("SELECT * FROM users WHERE scrnm=:scrnm", scrnm=usr_scrnm)[0]["priv"] == 0:
+            db.execute("UPDATE users SET priv=1 WHERE scrnm=:scrnm", scrnm=usr_scrnm)
+
+        else:
+            db.execute("UPDATE users SET priv=0 WHERE scrnm=:scrnm", scrnm=usr_scrnm)
+
+    return redirect("/")
+
+
+
 
 
 # account-related methods
@@ -141,7 +182,7 @@ def like(pid):
 @app.route("/account")
 @login_required
 def acct():
-    return render_template("account.html", screen_name=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"])
+    return render_template("account.html", screen_name=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"], level=session["priv"])
 
 
 # change logged-in user's password
@@ -176,12 +217,16 @@ def change_scrnm():
     if request.method == "GET":
         return render_template("change_scrnm.html", screen_name=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"])
 
+    name = db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"]
+
     if not request.form.get("new_scrnm"):
         return apology("Please enter a new screen name to change it.")
     if not request.form.get("new_scrnm_cnfrm"):
         return apology("Please confirm your screen name.")
     if request.form.get("new_scrnm") != request.form.get("new_scrnm_cnfrm"):
         return apology("Please ensure that your screen names match.")
+    if name == "admin":
+        return apology("The administrator cannot rename itself.")
 
     # check for repeats
     result = db.execute("SELECT * FROM users WHERE scrnm=:scrnm", scrnm=request.form.get("new_scrnm"))
@@ -196,6 +241,10 @@ def change_scrnm():
 @app.route("/account/delete", methods=["POST"])
 @login_required
 def delete_account():
+    name = db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"]
+    if name == "admin":
+        return apology("The administrator cannot delete itself.")
+
     db.execute("DELETE FROM users WHERE id=:id", id=session["user_id"])
     db.execute("DELETE FROM comments WHERE usr_id=:id", id=session["user_id"])
     db.execute("DELETE FROM likes WHERE usr_id=:id", id=session["user_id"])
@@ -232,6 +281,9 @@ def login():
 
         # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
+
+        # record privileges
+        session["priv"] = rows[0]["priv"]
 
         # Redirect user to home page
         return redirect("/")
@@ -292,5 +344,8 @@ def register():
 
     # log user in
     session["user_id"] = db.execute("SELECT * FROM users WHERE scrnm = :scrnm", scrnm=request.form.get("screen_name"))[0]["id"]
+
+    # record privileges
+    session["priv"] = db.execute("SELECT * FROM users WHERE scrnm = :scrnm", scrnm=request.form.get("screen_name"))[0]["priv"]
 
     return redirect("/")
