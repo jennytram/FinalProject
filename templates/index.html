@@ -33,12 +33,33 @@
     </td>
     <td>
       <a href='/like/{{ post["id"] }}'>{{ isLiked(post["id"]) }}</a>
-      {% if me == post["usr_id"] %}
+      {% if me == post["usr_id"] or session["priv"] > 0 %}
         &nbsp;
         <a href="/delete/{{ post['id'] }}">Delete</a>
+      {% endif %}
+      {% if session["priv"] == 2 %}
+        <form action="/admin_del/{{ post['usr_scrnm'] }}" method="post" name="delete_account" onsubmit="return confirmDelete()">
+          <div class="form-group">
+              <button class="btn btn-primary" name="delete_me" type="submit">Delete User</button>
+          </div>
+        </form>
+        <form action="/admin_make_mod/{{ post['usr_scrnm'] }}" method="post" name="make_mod" onsubmit="return confirmMod()">
+          <div class="form-group">
+              <button class="btn btn-primary" name="mod_me" type="submit">Change Privileges</button>
+          </div>
+        </form>
       {% endif %}
     </td>
   </tr>
   {% endfor %}
 </table>
+    <script>
+        function confirmDelete() {
+            return confirm("Are you sure you would like to delete this account? This action is permanent.");
+        }
+
+        function confirmMod() {
+            return confirm("Are you sure you would like to change this user's privileges?");
+        }
+    </script>
 {% endblock %}
