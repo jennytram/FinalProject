@@ -22,7 +22,7 @@
         {% for comment in comments %}
             <tr>
                 <td>
-                    {{ comment["usr_scrnm"] }}
+                    <a href='/usr/{{ comment["usr_scrnm"] }}'>{{ comment["usr_scrnm"] }}</a>
                 </td>
                 <td>
                     {{ comment["text"] }}
