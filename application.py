@@ -51,6 +51,13 @@ def comments(pid):
     return len(db.execute("SELECT * FROM comments WHERE post_id=:pid", pid=pid))
 
 
+
+@app.route("/home", methods=["GET","POST"])
+def homepage():
+    if request.method == "GET":
+        return render_template("homepage.html")
+    return redirect("/login")
+
 # display all posts
 @app.route("/", methods=["GET","POST"])
 @login_required
