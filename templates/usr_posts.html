@@ -4,6 +4,6 @@
     {{ user }}'s posts
 </h3>
 <h4>
-    Privilege level: {{ level }}
+    Account: {% if level == 0 %}User{% endif %}{% if level == 1 %}Moderator{% endif %}{% if level == 2 %}Administrator{% endif %}
 </h4>
 {% endblock %}
