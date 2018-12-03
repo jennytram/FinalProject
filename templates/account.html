@@ -6,7 +6,7 @@
 
 {% block main %}
     <h4>
-        Privilege level: {{ level }}
+        Account: {% if level == 0 %}User{% endif %}{% if level == 1 %}Moderator{% endif %}{% if level == 2 %}Administrator{% endif %}
     </h4>
     <span style="display:block; height: 50pt;"></span>
     <p>
