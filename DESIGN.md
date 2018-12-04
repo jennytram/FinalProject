@@ -15,6 +15,10 @@ SQL seemed like the obvious choice for storing the variable and distinct types o
 
 SQL also makes it very easy to call information to be displayed in the HTML. Since the 'db.execute' command tends to return a dictionary, it was perfect for using a for-loop structure in Jinja to display, for example, posts on a page. In addition, the 'timestamp' type in SQL made it easy to both stamp and order every post and comment by date, as is most commonly done on websites such as Reddit and Facebook.
 
+Most of the information seen on any given screen in YardTalk is likely to have originated in a SQL database. For example, when viewing 'All Posts,' you are really viewing a table with different attributes of a post from the table 'posts' in 'database.db' including the poster's screen name, the date it was posted, the number of likes and comments (actually implemented in separate global functions at the top of 'application.py' because of their database dependence), etc.
+
+As a result of our reliance on SQL, you will notice that a large portion of many HTML files is either blank or filled with Jinja code which, when cross-referenced with the underlying functions in 'application.py,' can be seen to call elements of SQL tables.
+
 ### Why JavaScript?
 We did not use JavaScript for many crucial functions of our website because a message board seemed to us to be a more server-oriented project, eschewing the need for a good deal fo client-side code. The majority of the JavaScript used was in the context of form validation, offering the user a more aesthetically pleasing way to remind the user to fill out the forms in an appropriate manner. Of course, to prevent malicious users from bypassing our forms, we had to implement much of this validation redundantly on the server side as well.
 
