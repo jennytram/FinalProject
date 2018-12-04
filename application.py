@@ -52,6 +52,7 @@ def comments(pid):
 
 
 
+# render the home page
 @app.route("/home", methods=["GET","POST"])
 def homepage():
     if request.method == "GET":
@@ -90,11 +91,13 @@ def post():
     if request.method == "GET":
         return render_template("newpost.html")
 
+    # validate form
     if not request.form.get("title"):
         return apology("Please include a title.")
     if not request.form.get("post"):
         return apology("Your post cannot be blank.")
 
+    # update databse
     db.execute("INSERT INTO posts (usr_id, text, usr_scrnm, title, dt) VALUES (:usr_id, :msg, :scrnm, :title, :dt)", usr_id=session["user_id"], msg=request.form.get("post"), scrnm=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"], title=request.form.get("title"), dt=time.strftime('%c'))
     return redirect("/")
 
@@ -103,7 +106,9 @@ def post():
 @app.route("/delete/<pid>")
 @login_required
 def delete(pid):
+    # only authorized users can delete posts
     if session["user_id"] == db.execute("SELECT * FROM posts WHERE id=:pid", pid=pid)[0]["usr_id"] or session["priv"] > 0:
+        # update database, and delete all comments and likes associated with the post
         db.execute("DELETE FROM posts WHERE id=:id", id=pid)
         db.execute("DELETE FROM comments WHERE post_id=:id", id=pid)
         db.execute("DELETE FROM likes WHERE post_id=:id", id=pid)
@@ -123,6 +128,7 @@ def see_post(pid):
 @app.route("/comment", methods=["POST"])
 @login_required
 def comment():
+    # update database
     db.execute("INSERT INTO comments (usr_id, text, dt, usr_scrnm, post_id) VALUES (:id, :msg, :dt, :scrnm, :post_id)", id=session["user_id"], msg=request.form.get("comment"), dt=time.strftime('%Y-%m-%d %H:%M:%S'), scrnm=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"], post_id=session["post"])
     return redirect(url_for("see_post", pid=session["post"]))
 
@@ -152,9 +158,11 @@ def like(pid):
 @app.route("/admin_del/<usr_scrnm>", methods=["POST"])
 @login_required
 def admin_delete(usr_scrnm):
+    # check that user not admin
     if usr_scrnm == "admin":
         return apology("The administrator cannot delete itself.")
 
+    # let admin delete user account
     elif session["priv"] == 2:
         db.execute("DELETE FROM users WHERE scrnm=:scrnm", scrnm=usr_scrnm)
         db.execute("DELETE FROM comments WHERE usr_scrnm=:scrnm", scrnm=usr_scrnm)
@@ -168,9 +176,11 @@ def admin_delete(usr_scrnm):
 @app.route("/admin_make_mod/<usr_scrnm>", methods=["GET", "POST"])
 @login_required
 def make_mod(usr_scrnm):
+    # chek that user not admin
     if usr_scrnm == "admin":
         return apology("The administrator cannot demote itself. This action would demote the administrator.")
 
+    # admin action
     elif session["priv"] == 2:
         if db.execute("SELECT * FROM users WHERE scrnm=:scrnm", scrnm=usr_scrnm)[0]["priv"] == 0:
             db.execute("UPDATE users SET priv=1 WHERE scrnm=:scrnm", scrnm=usr_scrnm)
@@ -199,6 +209,7 @@ def change_pwd():
     if request.method == "GET":
         return render_template("change_pwd.html", screen_name=db.execute("SELECT scrnm FROM users WHERE id=:id", id=session["user_id"])[0]["scrnm"])
 
+    # validate form
     if not request.form.get("old_pwd"):
         return apology("You must enter your old password before changing it.")
     if not request.form.get("new_pwd"):
@@ -210,6 +221,7 @@ def change_pwd():
 
     old_hash = db.execute("SELECT hash FROM users WHERE id=:id", id=session["user_id"])[0]["hash"]
 
+    # verify
     if not check_password_hash(old_hash, request.form.get("old_pwd")):
         return apology("You failed to properly input your old password.")
     db.execute("UPDATE users SET hash=:hash WHERE id=:id", id=session["user_id"], hash=generate_password_hash(request.form.get("new_pwd")))
