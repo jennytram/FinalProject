@@ -7,7 +7,7 @@ Message board
 ## What is YardTalk?
 YardTalk is an anonymous message board intended for use by students of Harvard College. It was developed in 2018 by Thomas Brooks and Jenny Tram, and it includes many features which are described in the remainder of this FAQ.
 
-##How does YardTalk work?
+## How does YardTalk work?
 YardTalk works in the CS50 IDE, or in any Flask environment in which the necessary packages are installed (the necessary packages are those imported at the top of the 'application.py' and 'helpers.py' files). YardTalk was tested and implemented in the CS50 IDE. A simple call to 'flask run' in the command line will launch our website locally.
 
 The functionality of YardTalk uses Javascript for some front-end form validation, HTML, CSS (mainly from Boostrap), and SQL for handling all the data that goes in and out of YardTalk.
