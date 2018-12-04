@@ -2,6 +2,8 @@
 ## Overview
 We wanted YardTalk to be as interactive as it could be within the given time constraints. That said, the main focus of our project was not necessarily aesthetic design or elaborating every method in 'application.py' as thoroughly as possible, but rather adding a lot of methods for different functionality in the website. Basically, we wanted YardTalk to resemble as closely as possible its real-life counterparts (or, if you would like to be overly generous to us, its competitors).
 
+The video linked here briefly explains the functionality of our website: https://youtu.be/bhcbS8K1zZA
+
 ## The Basics
 As explained in README.md, this project was implemented in Python, SQL, HTML, CSS, and JavaScript, roughly in descending order of importance for the website.
 
